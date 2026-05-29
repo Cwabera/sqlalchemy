@@ -1,31 +1,31 @@
-from app import db
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy_serializer import SerializerMixin
 
-# MODELS
-class User(db.Model):
+db = SQLAlchemy()
+
+
+class User(db.Model, SerializerMixin):
+    __tablename__ = "users"
+
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(100), nullable=True)
-    username = db.Column(db.String(100), nullable=False)
-    password = db.Column(db.String(500), nullable=True)
+    username = db.Column(db.String, nullable=False, unique=True)
+    email = db.Column(db.String, nullable=False, unique=True)
+    password = db.Column(db.String, nullable=False)
 
-    posts = db.relationship("Post", backref='user')
+    posts = db.relationship("Post", back_populates="user", cascade="all, delete-orphan")
 
-class Post(db.Model):
+    serialize_rules = ("-password", "-posts.user")
+
+
+class Post(db.Model, SerializerMixin):
+    __tablename__ = "posts"
+
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
+    title = db.Column(db.String, nullable=False)
     content = db.Column(db.Text, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id") )
 
-    comments = db.relationship("Comment", backref='post')
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
 
-class Comment(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    message = db.Column(db.Text, nullable=False)
+    user = db.relationship("User", back_populates="posts")
 
-    post_id = db.Column(db.Integer, db.ForeignKey("post.id"))
-
-
-
-class TokenBlocklist(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    jti = db.Column(db.String(36), nullable=False, index=True)
-    created_at = db.Column(db.DateTime, nullable=False)
+    serialize_rules = ("-user.posts",)

@@ -1,7 +1,7 @@
 from datetime import datetime
 from datetime import timezone
 from flask import Blueprint,request, jsonify
-from app import  db
+from models import db
 from flask_mail import Message
 from models import User, TokenBlocklist
 from werkzeug.security import check_password_hash
